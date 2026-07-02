@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Brain Rot Counter",
+  "version": "2.0.0",
+  "description": "Counts Instagram Reels and YouTube Shorts you watch, syncs with the BrainRot portal and lets you compete with friends.",
+  "permissions": ["storage", "alarms", "scripting"],
+  "host_permissions": [
+    "http://localhost:3017/*",
+    "http://localhost:3010/*",
+    "https://www.instagram.com/*",
+    "https://www.youtube.com/*",
+    "https://m.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.instagram.com/*",
+        "https://www.youtube.com/*",
+        "https://m.youtube.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["popup.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://localhost:3010/*"],
+      "js": ["connect.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

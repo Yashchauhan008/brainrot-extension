@@ -1,0 +1,237 @@
+#brainrot-counter-bubble {
+  position: fixed;
+  top: 90px;
+  right: 16px;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 10px;
+  background: rgba(20, 20, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  cursor: grab;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  backdrop-filter: blur(6px);
+}
+
+#brainrot-counter-bubble:active {
+  cursor: grabbing;
+}
+
+#brainrot-counter-bubble .brc-brain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#brainrot-counter-bubble .brc-count {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #ff6b81;
+}
+
+#brainrot-counter-bubble .brc-login {
+  display: none;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6b81, #a55eea);
+  cursor: pointer;
+}
+
+#brainrot-counter-bubble .brc-login:hover {
+  filter: brightness(1.1);
+}
+
+/* Locked (logged out): hide the count, show the login button */
+#brainrot-counter-bubble.brc-locked .brc-count {
+  display: none;
+}
+
+#brainrot-counter-bubble.brc-locked .brc-login {
+  display: block;
+}
+
+#brainrot-counter-bubble.brc-locked .brc-brain {
+  filter: grayscale(1) opacity(0.7);
+}
+
+@keyframes brc-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+#brainrot-counter-bubble .brc-pulse {
+  animation: brc-pop 0.3s ease;
+}
+
+/* Screen fade — darkens the page once the daily target is crossed.
+   Sits just below the bubble so the counter stays readable. */
+#brainrot-rot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483640;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+/* Hard block — full-screen wall once the daily limit is hit. */
+#brainrot-blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483645;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  background: rgba(8, 8, 12, 0.97);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+#brainrot-blocker .brc-block-emoji {
+  font-size: 56px;
+}
+
+#brainrot-blocker .brc-block-title {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+#brainrot-blocker .brc-block-text {
+  max-width: 420px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+#brainrot-blocker .brc-block-hint {
+  margin-top: 8px;
+  max-width: 420px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Friends panel — double-click the bubble for today's leaderboard. */
+#brainrot-friends {
+  position: fixed;
+  top: 150px;
+  right: 16px;
+  z-index: 2147483647;
+  width: 230px;
+  padding: 14px 16px;
+  background: rgba(20, 20, 24, 0.96);
+  border: 1px solid rgba(165, 94, 234, 0.5);
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  animation: brc-milestone-in 0.25s ease;
+}
+
+#brainrot-friends .brc-friends-title {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+#brainrot-friends .brc-friends-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#brainrot-friends .brc-friends-row:first-child {
+  border-top: none;
+}
+
+#brainrot-friends .brc-friends-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+#brainrot-friends .brc-friends-count {
+  margin-left: auto;
+  font-weight: 700;
+  color: #ff6b81;
+  font-variant-numeric: tabular-nums;
+}
+
+#brainrot-friends .brc-friends-empty {
+  padding: 4px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+#brainrot-friends .brc-friends-portal {
+  margin-top: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6b81, #a55eea);
+  cursor: pointer;
+}
+
+#brainrot-friends .brc-friends-portal:hover {
+  filter: brightness(1.1);
+}
+
+/* Milestone popup — one-off "your brain rn" callout near the bubble. */
+#brainrot-milestone {
+  position: fixed;
+  top: 150px;
+  right: 16px;
+  z-index: 2147483647;
+  max-width: 260px;
+  padding: 12px 16px;
+  background: rgba(20, 20, 24, 0.95);
+  border: 1px solid rgba(255, 107, 129, 0.5);
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  pointer-events: none;
+  animation: brc-milestone-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes brc-milestone-in {
+  0% {
+    transform: translateY(-8px) scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
