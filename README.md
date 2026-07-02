@@ -69,7 +69,12 @@ invite code at a time).
 
 ### Local development
 
-API and portal URLs are constants at the top of `background.js` — swap the
-commented `localhost` values (`http://localhost:3017` /
-`http://localhost:3010`) in and reload the extension. The manifest already
-includes both live and localhost host permissions.
+The shipped manifest is store-ready and only references production URLs.
+For local development:
+
+1. In `background.js`, swap in the commented `localhost` constants
+   (`http://localhost:3017` / `http://localhost:3010`).
+2. In `manifest.json`, temporarily add `"http://localhost:3017/*"` to
+   `host_permissions` and `"http://localhost:3010/*"` to the `connect.js`
+   content-script `matches`.
+3. Reload the extension. Revert both before packaging for the store.

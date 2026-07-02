@@ -217,18 +217,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // Fresh settings whenever the worker wakes up.
 syncSettings();
 
-// ---------- self-heal after reload/update ----------
-
-// Chrome does NOT re-inject content scripts into tabs that were already open
-// when the extension is reloaded — those tabs keep a dead script until a
-// manual refresh. Re-inject into every matching open tab so effects (hard
-// block, fade, rot icon) work immediately after every update.
-const SITE_URLS = [
-  "https://www.instagram.com/*",
-  "https://www.youtube.com/*",
-  "https://m.youtube.com/*",
-];
-const PORTAL_URLS = ["https://brainrot.quicklabs.pro/*", "http://localhost:3010/*"];
+// ---------- install / update housekeeping ----------
 
 // Bump when locally stored counters become invalid (e.g. the extension now
 // talks to the production server — counts from local testing are stale).
@@ -243,27 +232,15 @@ async function resetLocalCounters(extra = {}) {
   });
 }
 
+// Note: Chrome doesn't re-inject content scripts into already-open tabs on
+// update — users refresh their Instagram/YouTube tabs once. We deliberately
+// don't use the `scripting` permission for this; keeping the permission set
+// minimal matters more for Web Store review.
 chrome.runtime.onInstalled.addListener(async () => {
   const { dataVersion } = await storageGet({ dataVersion: 0 });
   if (dataVersion < DATA_VERSION) {
     await resetLocalCounters({ dataVersion: DATA_VERSION });
   }
-
-  const inject = async (urls, files, css) => {
-    const tabs = await chrome.tabs.query({ url: urls });
-    for (const tab of tabs) {
-      try {
-        if (css)
-          await chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: css });
-        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files });
-      } catch (_) {
-        // chrome:// previews, discarded tabs etc. — skip
-      }
-    }
-  };
-
-  await inject(SITE_URLS, ["content.js"], ["popup.css"]);
-  await inject(PORTAL_URLS, ["connect.js"], null);
 });
 
 // ---------- messages ----------
