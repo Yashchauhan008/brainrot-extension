@@ -3,8 +3,11 @@
 // race-free across tabs, and does all network calls (content scripts are
 // blocked by page CSP on Instagram/YouTube).
 
-const API_URL = "http://localhost:3017";
-const PORTAL_URL = "http://localhost:3010";
+const API_URL = "https://api.brainrot.quicklabs.pro";
+const PORTAL_URL = "https://brainrot.quicklabs.pro";
+// Local development:
+// const API_URL = "http://localhost:3017";
+// const PORTAL_URL = "http://localhost:3010";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FLUSH_ALARM = "brc-flush-outbox";
@@ -225,9 +228,27 @@ const SITE_URLS = [
   "https://www.youtube.com/*",
   "https://m.youtube.com/*",
 ];
-const PORTAL_URLS = ["http://localhost:3010/*"];
+const PORTAL_URLS = ["https://brainrot.quicklabs.pro/*", "http://localhost:3010/*"];
+
+// Bump when locally stored counters become invalid (e.g. the extension now
+// talks to the production server — counts from local testing are stale).
+const DATA_VERSION = 2;
+
+async function resetLocalCounters(extra = {}) {
+  await storageSet({
+    watchedShortform: [],
+    outbox: [],
+    milestoneState: null,
+    ...extra,
+  });
+}
 
 chrome.runtime.onInstalled.addListener(async () => {
+  const { dataVersion } = await storageGet({ dataVersion: 0 });
+  if (dataVersion < DATA_VERSION) {
+    await resetLocalCounters({ dataVersion: DATA_VERSION });
+  }
+
   const inject = async (urls, files, css) => {
     const tabs = await chrome.tabs.query({ url: urls });
     for (const tab of tabs) {
@@ -254,13 +275,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
 
     case "SET_TOKEN":
-      storageSet({
-        auth: {
-          token: message.token,
-          refresh_token: message.refresh_token || null,
-          user: message.user,
-        },
-      }).then(() => {
+      storageGet({ auth: null }).then(async ({ auth }) => {
+        // Different account than before — its counts (and queued events)
+        // belong to the old user, don't leak them into this one.
+        const prevUserId = auth?.user?.id;
+        const nextUserId = message.user?.id;
+        if (prevUserId && nextUserId && prevUserId !== nextUserId) {
+          await resetLocalCounters();
+        }
+
+        await storageSet({
+          auth: {
+            token: message.token,
+            refresh_token: message.refresh_token || null,
+            user: message.user,
+          },
+        });
         flushOutbox();
         syncSettings();
         sendResponse({ ok: true });
