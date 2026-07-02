@@ -145,6 +145,53 @@ async function flushOutbox() {
   }
 }
 
+// ---------- count reconcile ----------
+
+// Rebuild the local rolling-24h window from the server's events (merged with
+// anything still queued in the outbox). Heals reinstalls / new devices where
+// local storage starts at 0 while the account already has counts.
+function reconcileCounts() {
+  recordChain = recordChain.then(async () => {
+    try {
+      const { auth, outbox } = await storageGet({ auth: null, outbox: [] });
+      if (!auth) return;
+
+      const get = (token) =>
+        fetch(`${API_URL}/events/recent`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+      let response = await get(auth.token);
+
+      if (response.status === 401) {
+        const refreshed = await refreshAuth();
+        if (!refreshed) return;
+        response = await get(refreshed.token);
+      }
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const serverEntries = (data.events || []).map((e) => ({
+        platform: e.platform,
+        ts: new Date(e.watched_at).getTime(),
+      }));
+      // Outbox events haven't reached the server yet — count them too.
+      const pendingEntries = outbox.map((e) => ({
+        platform: e.platform,
+        ts: new Date(e.watched_at).getTime(),
+      }));
+
+      await storageSet({
+        watchedShortform: pruneWindow([...serverEntries, ...pendingEntries]),
+      });
+    } catch (_) {
+      // Network down — local window stays as-is, next reconcile heals it.
+    }
+  });
+  return recordChain;
+}
+
 // ---------- settings sync ----------
 
 // Pulls the user's effect toggles (rot icon / screen fade / milestone popups /
@@ -211,11 +258,15 @@ chrome.alarms.create(FLUSH_ALARM, { periodInMinutes: 0.5 });
 chrome.alarms.create(SETTINGS_ALARM, { periodInMinutes: 5 });
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === FLUSH_ALARM) flushOutbox();
-  if (alarm.name === SETTINGS_ALARM) syncSettings();
+  if (alarm.name === SETTINGS_ALARM) {
+    syncSettings();
+    reconcileCounts();
+  }
 });
 
-// Fresh settings whenever the worker wakes up.
+// Fresh settings + server-backed counts whenever the worker wakes up.
 syncSettings();
+reconcileCounts();
 
 // ---------- install / update housekeeping ----------
 
@@ -270,6 +321,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         flushOutbox();
         syncSettings();
+        reconcileCounts();
         sendResponse({ ok: true });
       });
       return true;
