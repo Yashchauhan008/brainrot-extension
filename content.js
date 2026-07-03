@@ -153,9 +153,9 @@
 
   // ---------- hard block ----------
 
-  // Once the 24h count reaches the daily target, reels/shorts are covered by
-  // a full-screen wall: video paused, scroll/keys swallowed. Clears on its
-  // own as the 24h window rolls (or when the toggle is turned off).
+  // Once today's count reaches the daily target, reels/shorts are covered by
+  // a full-screen wall: video paused, scroll/keys swallowed. Clears at
+  // midnight (or when the toggle is turned off).
   function ensureBlocker() {
     if (blockerEl && document.documentElement.contains(blockerEl)) return;
 
@@ -165,7 +165,7 @@
       <div class="brc-block-emoji">🧠🚫</div>
       <div class="brc-block-title">Daily limit reached</div>
       <div class="brc-block-text"></div>
-      <div class="brc-block-hint">Comes back as your 24h window frees up.<br>Toggle "Hard block" off in the BrainRot portal to disable.</div>`;
+      <div class="brc-block-hint">Unlocks at midnight — see you tomorrow.<br>Toggle "Hard block" off in the BrainRot portal to disable.</div>`;
 
     // Swallow every input that could scroll to the next reel.
     for (const type of ["wheel", "touchmove", "pointerdown", "click"]) {
@@ -214,7 +214,7 @@
 
     if (blockerActive) {
       blockerEl.querySelector(".brc-block-text").textContent =
-        `${count} brainrot videos in the last 24h — your limit is ${target}. Go touch grass 🌱`;
+        `${count} brainrot videos today — your limit is ${target}. Go touch grass 🌱`;
       silenceVideos();
     }
   }
@@ -232,7 +232,7 @@
   // (default target 50 → popups at 100, 200, 300 …). The reached level is
   // stored so other tabs / reloads don't replay it; it resets with the window.
   const MILESTONE_LINES = [
-    (n) => `🧠🪰 ${n} brainrot videos in 24h — your brain is officially compost`,
+    (n) => `🧠🪰 ${n} brainrot videos today — your brain is officially compost`,
     (n) => `💀 ${n}?! the rot is terminal, seek grass immediately`,
     (n) => `🪦 ${n} videos. legends say you can still put the phone down`,
   ];
@@ -271,9 +271,9 @@
     if (level < 1) return;
 
     chrome.storage.local.get({ milestoneState: null }, ({ milestoneState }) => {
-      const cutoff = Date.now() - DAY_MS;
+      // Milestones reset with the day, same as the count.
       const known =
-        milestoneState && milestoneState.ts > cutoff ? milestoneState.level : 0;
+        milestoneState && milestoneState.ts >= startOfToday() ? milestoneState.level : 0;
       if (level <= known) return;
 
       chrome.storage.local.set({ milestoneState: { level, ts: Date.now() } });
@@ -421,11 +421,19 @@
     maybeMilestone(count);
   }
 
+  // Day-wise counting: the bubble shows today's swipes (midnight to
+  // midnight, device time), resetting to 0 as the date rolls over.
+  function startOfToday() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }
+
   function updateCount() {
     chrome.storage.local.get({ watchedShortform: [] }, ({ watchedShortform }) => {
       if (!countEl) return;
-      const cutoff = Date.now() - DAY_MS;
-      const count = watchedShortform.filter((e) => e.ts > cutoff).length;
+      const cutoff = startOfToday();
+      const count = watchedShortform.filter((e) => e.ts >= cutoff).length;
       countEl.textContent = String(count);
       countEl.classList.remove("brc-pulse");
       void countEl.offsetWidth;
