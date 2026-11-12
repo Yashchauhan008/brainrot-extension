@@ -6,6 +6,7 @@ const DEFAULTS = {
   hard_block_enabled: false,
   daily_target: 50,
   manual_block_until: 0,
+  block_feed_videos: false,
   schedule_enabled: false,
   schedule_start: "22:00",
   schedule_end: "06:00",
@@ -103,6 +104,8 @@ function unblock() {
   $("fade").addEventListener("change", (e) => save({ screen_fade_enabled: e.target.checked }));
   $("milestones").addEventListener("change", (e) => save({ milestone_popups_enabled: e.target.checked }));
 
+  $("feedVideos").checked = settings.block_feed_videos;
+  $("feedVideos").addEventListener("change", (e) => save({ block_feed_videos: e.target.checked }));
   $("sched").checked = settings.schedule_enabled;
   $("schedStart").value = settings.schedule_start;
   $("schedEnd").value = settings.schedule_end;

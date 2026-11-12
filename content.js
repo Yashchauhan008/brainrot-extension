@@ -22,6 +22,7 @@
     hard_block_enabled: false,
     daily_target: 50,
     manual_block_until: 0, // epoch ms; block reels/shorts until then
+    block_feed_videos: false, // hide video posts in the Instagram feed
     schedule_enabled: false, // recurring daily block window
     schedule_start: "22:00",
     schedule_end: "06:00",
@@ -228,6 +229,11 @@
     const manual = scheduled || Date.now() < (settings.manual_block_until || 0);
     // Also hide the Shorts/Reels buttons and shelves while a block is on.
     document.documentElement.classList.toggle("brc-hide-shortform", manual);
+    // Independent of blocking: hide video posts in the Instagram home feed.
+    document.documentElement.classList.toggle(
+      "brc-hide-feed-video",
+      Boolean(settings.block_feed_videos) && location.hostname.includes("instagram.com"),
+    );
     const limitHit = settings.hard_block_enabled && count >= target;
     blockerActive = onVideoPage && (manual || limitHit);
 
@@ -419,6 +425,14 @@
     onVideoPage = video !== null;
     setBubbleVisible(onVideoPage);
     if (wasOnVideoPage !== onVideoPage) renderFade(lastCount);
+
+    // Hidden feed videos can still autoplay (audio!) — keep them paused.
+    if (settings.block_feed_videos && location.hostname.includes("instagram.com") && !onVideoPage) {
+      document.querySelectorAll("article video").forEach((v) => {
+        if (!v.paused) v.pause();
+        v.muted = true;
+      });
+    }
 
     // Manual blocks expire on a timer — re-evaluate every tick.
     renderBlocker(lastCount);

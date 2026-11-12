@@ -260,3 +260,10 @@ html.brc-hide-shortform a[href^="/reels/?"],
 html.brc-hide-shortform div:has(> a[href="/reels/"]) {
   display: none !important;
 }
+
+/* ---------- optional: hide video posts in the Instagram feed ---------- */
+html.brc-hide-feed-video article:has(video),
+html.brc-hide-feed-video article:has(a[href*="/reel/"]),
+html.brc-hide-feed-video article:has(a[href*="/reels/"]) {
+  display: none !important;
+}
