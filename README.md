@@ -1,4 +1,5 @@
-# Focus Meter 🧠 (formerly Brain Rot Counter)
+# Reels & Shorts Blocker – Short-Form Video Blocker 🧠
+_(formerly Brain Rot Counter / Focus Meter)_
 
 Chrome extension that counts the Instagram Reels and YouTube Shorts you swipe
 through and can **block them on command**. Fully offline — no account, no

@@ -245,14 +245,14 @@
         text.textContent = "You asked me to stop you. Go do something real 🌱";
         hint.textContent =
           scheduled
-            ? `Focus window ${settings.schedule_start}–${settings.schedule_end}. Change it in the Focus Meter popup.`
+            ? `Focus window ${settings.schedule_start}–${settings.schedule_end}. Change it in the extension popup.`
             : until > Date.now() + 5 * 365 * 24 * 3600 * 1000
-            ? "Open the Focus Meter popup to unblock."
-            : `Blocked until ${new Date(until).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. Open the Focus Meter popup to unblock early.`;
+            ? "Open the extension popup to unblock."
+            : `Blocked until ${new Date(until).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. Open the extension popup to unblock early.`;
       } else {
         title.textContent = "Daily limit reached";
         text.textContent = `${count} brainrot videos today — your limit is ${target}. Go touch grass 🌱`;
-        hint.textContent = "Unlocks at midnight. Turn off \"Hard block\" in the Focus Meter popup to disable.";
+        hint.textContent = "Unlocks at midnight. Turn off \"Hard block\" in the extension popup to disable.";
       }
       silenceVideos();
     }
@@ -304,7 +304,7 @@
       const thumb = document.createElement("div");
       thumb.className = "brc-feed-thumb";
       if (thumbUrl) thumb.style.backgroundImage = `url("${thumbUrl.replace(/"/g, "")}")`;
-      thumb.innerHTML = `<span>🧠 Video muted by Focus Meter</span>`;
+      thumb.innerHTML = `<span>🧠 Video muted by Reels & Shorts Blocker</span>`;
       for (const type of ["click", "pointerdown", "dblclick"]) {
         thumb.addEventListener(type, (e) => {
           e.preventDefault();

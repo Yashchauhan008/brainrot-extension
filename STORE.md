@@ -1,36 +1,38 @@
-# Chrome Web Store listing — Focus Meter v3.0.0
+# Chrome Web Store listing — Reels & Shorts Blocker v3.0.0
 
 ## Store listing tab
-**Name:** Focus Meter
-**Summary (max 132 chars):** Count and block Instagram Reels & YouTube Shorts on command. Daily limits, schedules and lifetime stats. 100% offline.
+**Name (manifest, max 75):** Reels & Shorts Blocker – Short-Form Video Blocker
+**Summary (max 132 chars):** Block Instagram Reels and YouTube Shorts on command. Set daily limits, schedules and see your stats. 100% offline, no account.
 **Category:** Productivity   **Language:** English
 
 **Detailed description:**
-Reels and Shorts are built to keep you scrolling. Focus Meter puts you back in control.
+Stop doomscrolling. Reels & Shorts Blocker is a short-form video blocker for Instagram Reels and YouTube Shorts. Turn the block on whenever you want, set a daily limit, and see exactly how much short-form content you watch.
 
-BLOCK ON COMMAND
+BLOCK REELS & SHORTS ON COMMAND
 • One tap in the toolbar popup: block for 1 hour, 2 hours, until midnight, or until you unblock
-• Full-screen block wall pauses the video and stops scrolling to the next one
-• Shortcut: Alt+Shift+B blocks until midnight
+• Full-screen block screen pauses the video and stops scrolling to the next one
+• Keyboard shortcut: Alt+Shift+B blocks until midnight
 • Cooling-off delay before you can unblock early, so impulse can't win
 • Daily schedule (e.g. 10pm–6am) blocks automatically
-• Hides the Shorts / Reels buttons and shelves while a block is on
+• Hides the Shorts and Reels buttons and shelves while a block is on
 
-KNOW YOUR HABIT
-• Floating counter shows how many Reels/Shorts you've swiped today
-• Insights tab: daily/weekly/monthly chart, average per day, heaviest day, under-target streak, peak hour, lifetime total
-• Set a daily target; optional hard block when you reach it
-• Optional effects: rotting-brain icon, screen fade and milestone popups past your target
+TRACK YOUR SHORT-FORM SCREEN TIME
+• Floating counter shows how many Reels and Shorts you've swiped today
+• Insights tab: daily, weekly and monthly charts, average per day, heaviest day, under-target streak, peak hour and lifetime total
+• Set a daily target, with an optional hard block when you reach it
+• Optional effects: rotting-brain icon, screen fade and milestone popups once you pass your target
 
-INSTAGRAM FEED
-• Optionally freeze and mute autoplaying videos in the feed (thumbnail instead)
+INSTAGRAM FEED CONTROL
+• Optionally freeze and mute autoplaying videos in your Instagram feed (a thumbnail is shown instead)
 
 PRIVATE BY DESIGN
 • No account, no server, no tracking, no network requests
-• Only swipe counts are stored, locally on your device — never video IDs or history
-• Export / import a backup from Settings
+• Only swipe counts are stored, locally on your device — never video IDs, titles or watch history
+• Export and import a backup from Settings
 
-Focus Meter is an independent tool and is not affiliated with Instagram, Meta or YouTube/Google.
+Great for students, focus and productivity, digital detox and cutting down screen time.
+
+Reels & Shorts Blocker is an independent tool and is not affiliated with, endorsed by or sponsored by Instagram, Meta, YouTube or Google.
 
 ## Assets (in store-assets/)
 - Icon 128x128: icons/icon-128.png (already in the package)
@@ -38,7 +40,7 @@ Focus Meter is an independent tool and is not affiliated with Instagram, Meta or
 - Small promo tile 440x280 (optional, not generated)
 
 ## Privacy practices tab
-**Single purpose:** Count and block Instagram Reels and YouTube Shorts to help users reduce short-form video use.
+**Single purpose:** Block and count Instagram Reels and YouTube Shorts to help users reduce short-form video use.
 
 **Permission justifications**
 - storage: Saves the user's swipe counts and settings locally on their device.

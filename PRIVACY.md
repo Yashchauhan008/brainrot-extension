@@ -1,8 +1,8 @@
-# Focus Meter — Privacy Policy
+# Reels & Shorts Blocker — Privacy Policy
 
 _Last updated: 12 November 2026_
 
-Focus Meter is a browser extension that counts and blocks Instagram Reels and
+Reels & Shorts Blocker is a browser extension that counts and blocks Instagram Reels and
 YouTube Shorts. It is designed to work entirely on your device.
 
 ## What it stores

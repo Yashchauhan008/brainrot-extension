@@ -1,4 +1,4 @@
-// Focus Meter popup — tabs: Focus (block + today), Insights (analytics), Settings.
+// Reels & Shorts Blocker popup — tabs: Focus (block + today), Insights (analytics), Settings.
 // All state lives in chrome.storage.local; nothing leaves the device.
 const DEFAULTS = {
   rot_icon_enabled: true,
@@ -297,7 +297,7 @@ function importData(file) {
       chrome.storage.local.set({ dailyStats: merged, statsBackfilled: true });
       $("dataMsg").textContent = `Imported ${Object.keys(incoming.dailyStats).length} days.`;
     } catch (_) {
-      $("dataMsg").textContent = "That doesn't look like a Focus Meter export.";
+      $("dataMsg").textContent = "That doesn't look like a Reels & Shorts Blocker export.";
     }
   };
   reader.readAsText(file);

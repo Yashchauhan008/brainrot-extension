@@ -1,4 +1,4 @@
-// Focus Meter — background service worker (fully offline, no server).
+// Reels & Shorts Blocker — background service worker (fully offline, no server).
 // Owns the swipe log in chrome.storage.local so counting is race-free across
 // tabs. Two stores:
 //   watchedShortform — raw swipe events, only the last ~2 days (drives the
