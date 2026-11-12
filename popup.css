@@ -261,9 +261,29 @@ html.brc-hide-shortform div:has(> a[href="/reels/"]) {
   display: none !important;
 }
 
-/* ---------- optional: hide video posts in the Instagram feed ---------- */
-html.brc-hide-feed-video article:has(video),
-html.brc-hide-feed-video article:has(a[href*="/reel/"]),
-html.brc-hide-feed-video article:has(a[href*="/reels/"]) {
-  display: none !important;
+/* ---------- optional: freeze + mute Instagram feed videos ---------- */
+.brc-feed-thumb {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 14px;
+  background: #111 center / cover no-repeat;
+  cursor: default;
+}
+.brc-feed-thumb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+.brc-feed-thumb span {
+  position: relative;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font: 600 12px -apple-system, system-ui, sans-serif;
 }

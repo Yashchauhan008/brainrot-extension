@@ -19,6 +19,8 @@ server, no network requests. Everything lives in `chrome.storage.local`.
 - **Shortcut** — `Alt+Shift+B` blocks until midnight (rebind at
   `chrome://extensions/shortcuts`). It only blocks; unblocking goes via the popup.
 - **Daily schedule** — recurring block window (e.g. 22:00–06:00).
+- **Feed videos** — optional: Instagram feed videos are paused, muted and
+  covered with a static thumbnail instead of autoplaying.
 - **Entry points hidden** — while blocked, Shorts/Reels buttons and shelves
   are hidden from the page.
 - **Counter bubble** — draggable count of today's swipes, rotting-brain icon,

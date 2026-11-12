@@ -229,11 +229,6 @@
     const manual = scheduled || Date.now() < (settings.manual_block_until || 0);
     // Also hide the Shorts/Reels buttons and shelves while a block is on.
     document.documentElement.classList.toggle("brc-hide-shortform", manual);
-    // Independent of blocking: hide video posts in the Instagram home feed.
-    document.documentElement.classList.toggle(
-      "brc-hide-feed-video",
-      Boolean(settings.block_feed_videos) && location.hostname.includes("instagram.com"),
-    );
     const limitHit = settings.hard_block_enabled && count >= target;
     blockerActive = onVideoPage && (manual || limitHit);
 
@@ -267,6 +262,56 @@
     document.querySelectorAll("video").forEach((v) => {
       v.pause();
       v.muted = true;
+    });
+  }
+
+  // ---------- feed videos: freeze + mute + thumbnail ----------
+
+  // Instagram feed videos (inside <article>) are paused, muted and covered by
+  // a static thumbnail so they can't autoplay or make noise. Reels pages are
+  // untouched here — those are handled by the block wall.
+  function renderFeedVideos() {
+    if (!settings.block_feed_videos || onVideoPage) {
+      if (document.querySelector(".brc-feed-thumb")) {
+        document.querySelectorAll(".brc-feed-thumb").forEach((el) => el.remove());
+        document.querySelectorAll("video[data-brc-frozen]").forEach((v) => {
+          delete v.dataset.brcFrozen;
+        });
+      }
+      return;
+    }
+
+    document.querySelectorAll("article video").forEach((v) => {
+      if (!v.paused) v.pause();
+      v.muted = true;
+      if (v.dataset.brcFrozen) return;
+      v.dataset.brcFrozen = "1";
+
+      // Instagram's player re-plays on scroll — pause again whenever it tries.
+      v.addEventListener("play", () => {
+        if (v.dataset.brcFrozen) v.pause();
+      });
+      v.addEventListener("volumechange", () => {
+        if (v.dataset.brcFrozen && !v.muted) v.muted = true;
+      });
+
+      const holder = v.parentElement;
+      if (!holder) return;
+      if (getComputedStyle(holder).position === "static") holder.style.position = "relative";
+
+      const img = holder.querySelector("img");
+      const thumbUrl = v.poster || img?.src || "";
+      const thumb = document.createElement("div");
+      thumb.className = "brc-feed-thumb";
+      if (thumbUrl) thumb.style.backgroundImage = `url("${thumbUrl.replace(/"/g, "")}")`;
+      thumb.innerHTML = `<span>🧠 Video muted by Focus Meter</span>`;
+      for (const type of ["click", "pointerdown", "dblclick"]) {
+        thumb.addEventListener(type, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+      }
+      holder.appendChild(thumb);
     });
   }
 
@@ -426,13 +471,7 @@
     setBubbleVisible(onVideoPage);
     if (wasOnVideoPage !== onVideoPage) renderFade(lastCount);
 
-    // Hidden feed videos can still autoplay (audio!) — keep them paused.
-    if (settings.block_feed_videos && location.hostname.includes("instagram.com") && !onVideoPage) {
-      document.querySelectorAll("article video").forEach((v) => {
-        if (!v.paused) v.pause();
-        v.muted = true;
-      });
-    }
+    if (location.hostname.includes("instagram.com")) renderFeedVideos();
 
     // Manual blocks expire on a timer — re-evaluate every tick.
     renderBlocker(lastCount);
