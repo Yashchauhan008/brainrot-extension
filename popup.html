@@ -3,60 +3,99 @@
 <head>
 <meta charset="utf-8">
 <title>Focus Meter</title>
-<style>
-  body { width: 300px; margin: 0; padding: 14px; font: 13px -apple-system, system-ui, sans-serif; color: #1c1c1e; background: #fff; }
-  @media (prefers-color-scheme: dark) { body { color: #f2f2f7; background: #1c1c1e; } .card { background: #2c2c2e !important; } button { background: #3a3a3c !important; color: #f2f2f7 !important; } }
-  [hidden] { display: none !important; }
-  h1 { font-size: 15px; margin: 0 0 10px; }
-  .card { background: #f2f2f7; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
-  .count { font-size: 34px; font-weight: 700; line-height: 1; }
-  .sub { color: #8e8e93; font-size: 12px; margin-top: 4px; }
-  .status { font-weight: 600; margin-bottom: 8px; }
-  .on { color: #d70015; }
-  .row { display: flex; gap: 6px; flex-wrap: wrap; }
-  button { border: 0; border-radius: 8px; padding: 7px 10px; background: #e5e5ea; font: inherit; cursor: pointer; }
-  button.primary { background: #d70015; color: #fff; }
-  button:disabled { opacity: .5; cursor: default; }
-  label.opt { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
-  input[type=number] { width: 60px; }
-</style>
+<link rel="stylesheet" href="popup-ui.css">
 </head>
 <body>
-  <h1>🧠 Focus Meter</h1>
+  <header>
+    <div class="brand">🧠 <b>Focus Meter</b></div>
+    <nav role="tablist" id="tabs">
+      <button role="tab" data-tab="focus" aria-selected="true">Focus</button>
+      <button role="tab" data-tab="insights" aria-selected="false">Insights</button>
+      <button role="tab" data-tab="settings" aria-selected="false">Settings</button>
+    </nav>
+  </header>
 
-  <div class="card">
-    <div class="count" id="count">0</div>
-    <div class="sub" id="breakdown">reels / shorts today</div>
-  </div>
-
-  <div class="card">
-    <div class="status" id="status"></div>
-    <div class="row" id="blockButtons">
-      <button data-min="60">1 hour</button>
-      <button data-min="120">2 hours</button>
-      <button data-min="midnight">Until midnight</button>
-      <button data-min="forever">Until I unblock</button>
+  <section id="tab-focus" class="tab">
+    <div class="card hero">
+      <div class="hero-top">
+        <div><div class="big" id="count">0</div><div class="muted" id="breakdown">reels / shorts today</div></div>
+        <div class="pill" id="targetPill">of 50</div>
+      </div>
+      <div class="meter"><div class="meter-fill" id="meterFill"></div></div>
     </div>
-    <div class="row" id="unblockRow" hidden>
-      <button id="unblock" class="primary">Unblock</button>
+
+    <div class="card" id="blockCard">
+      <div class="status" id="status"></div>
+      <div class="chips" id="blockButtons">
+        <button data-min="60">1 hour</button>
+        <button data-min="120">2 hours</button>
+        <button data-min="midnight">Until midnight</button>
+        <button data-min="forever">Until I unblock</button>
+      </div>
+      <div id="unblockRow" hidden>
+        <button id="unblock" class="danger wide">Unblock</button>
+        <div class="muted small center">Early unblock needs a 30s cooling-off — keep this open.</div>
+      </div>
     </div>
-  </div>
+    <div class="muted small center">Shortcut <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> blocks until midnight</div>
+  </section>
 
-  <div class="card">
-    <label class="opt">Daily target <input type="number" id="target" min="1" max="1000"></label>
-    <label class="opt">Hard block at target <input type="checkbox" id="hard"></label>
-    <label class="opt">Rotting brain icon <input type="checkbox" id="rot"></label>
-    <label class="opt">Screen fade past target <input type="checkbox" id="fade"></label>
-    <label class="opt">Milestone popups <input type="checkbox" id="milestones"></label>
-  </div>
+  <section id="tab-insights" class="tab" hidden>
+    <div class="card">
+      <div class="row-between">
+        <div class="h">Reels &amp; Shorts per day</div>
+        <div class="seg" id="range">
+          <button data-days="7" aria-pressed="true">7d</button>
+          <button data-days="30" aria-pressed="false">30d</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="sw ig"></i>Instagram <b id="lgIg">0</b></span>
+        <span><i class="sw yt"></i>YouTube <b id="lgYt">0</b></span>
+        <button class="link" id="tableBtn" aria-pressed="false">Table</button>
+      </div>
+      <div class="chart-wrap" id="chartWrap">
+        <div id="chart"></div>
+        <div id="tip" class="tip" hidden></div>
+      </div>
+      <table id="table" hidden></table>
+    </div>
 
-  <div class="card">
-    <label class="opt">Freeze &amp; mute feed videos (Instagram) <input type="checkbox" id="feedVideos"></label>
-    <label class="opt">Daily schedule <input type="checkbox" id="sched"></label>
-    <label class="opt">From <input type="time" id="schedStart"></label>
-    <label class="opt">To <input type="time" id="schedEnd"></label>
-    <div class="sub">Shortcut: Alt+Shift+B blocks until midnight (change at chrome://extensions/shortcuts)</div>
-  </div>
+    <div class="tiles">
+      <div class="tile"><div class="muted small">Average / day</div><div class="tv" id="tAvg">–</div></div>
+      <div class="tile"><div class="muted small">Heaviest day</div><div class="tv" id="tMax">–</div></div>
+      <div class="tile"><div class="muted small">Under-target streak</div><div class="tv" id="tStreak">–</div></div>
+      <div class="tile"><div class="muted small">Peak hour</div><div class="tv" id="tPeak">–</div></div>
+    </div>
+    <div class="muted small center" id="estimate"></div>
+  </section>
+
+  <section id="tab-settings" class="tab" hidden>
+    <div class="card">
+      <div class="h">Limits</div>
+      <label class="opt"><span>Daily target</span><input type="number" id="target" min="1" max="1000"></label>
+      <label class="opt"><span>Hard block at target<small>Wall off Reels/Shorts once reached</small></span><input class="sw-input" type="checkbox" id="hard"></label>
+    </div>
+    <div class="card">
+      <div class="h">Instagram feed</div>
+      <label class="opt"><span>Freeze &amp; mute feed videos<small>Thumbnail instead of autoplay</small></span><input class="sw-input" type="checkbox" id="feedVideos"></label>
+    </div>
+    <div class="card">
+      <div class="h">Daily schedule</div>
+      <label class="opt"><span>Block automatically</span><input class="sw-input" type="checkbox" id="sched"></label>
+      <div class="times">
+        <label>From <input type="time" id="schedStart"></label>
+        <label>To <input type="time" id="schedEnd"></label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="h">Effects</div>
+      <label class="opt"><span>Rotting brain icon</span><input class="sw-input" type="checkbox" id="rot"></label>
+      <label class="opt"><span>Screen fade past target</span><input class="sw-input" type="checkbox" id="fade"></label>
+      <label class="opt"><span>Milestone popups</span><input class="sw-input" type="checkbox" id="milestones"></label>
+    </div>
+    <div class="muted small center">All data stays on this device.</div>
+  </section>
 
   <script src="popup.js"></script>
 </body>

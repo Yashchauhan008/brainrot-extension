@@ -28,11 +28,11 @@ server, no network requests. Everything lives in `chrome.storage.local`.
   at the target. All toggles are in the popup.
 
 No video IDs or history are stored — only a per-platform timestamp per swipe
-(kept 7 days).
+(kept 30 days).
 
 ## Files
 
 - `content.js` — detects reels/shorts, bubble, effects, block wall
 - `background.js` — owns the swipe log, handles the shortcut
-- `popup.html` / `popup.js` — controls
+- `popup.html` / `popup.js` / `popup-ui.css` — popup with Focus, Insights (7/30-day chart, averages, streak, peak hour) and Settings tabs
 - `popup.css` — styles injected into Instagram/YouTube

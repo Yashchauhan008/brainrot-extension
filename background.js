@@ -2,7 +2,7 @@
 // Owns the local swipe log in chrome.storage.local so counting is race-free
 // across tabs. Content scripts report "WATCH_EVENT"; the popup edits settings.
 
-const KEEP_MS = 7 * 24 * 60 * 60 * 1000; // keep a week of history
+const KEEP_MS = 30 * 24 * 60 * 60 * 1000; // 30 days of history for Insights
 
 function storageGet(defaults) {
   return new Promise((resolve) => chrome.storage.local.get(defaults, resolve));
