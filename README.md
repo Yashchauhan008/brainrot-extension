@@ -1,80 +1,36 @@
-# Brain Rot Counter 🧠 — Extension
+# Focus Meter 🧠 (formerly Brain Rot Counter)
 
-Chrome extension that counts how many Instagram Reels and YouTube Shorts you
-swipe through, shows a floating brain bubble with your last-24h count, and
-syncs everything to the BrainRot portal so you can compete with friends.
+Chrome extension that counts the Instagram Reels and YouTube Shorts you swipe
+through and can **block them on command**. Fully offline — no account, no
+server, no network requests. Everything lives in `chrome.storage.local`.
 
-**Live portal:** https://brainrot.quicklabs.pro
-**Live API:** https://api.brainrot.quicklabs.pro
+## Install
 
-## Setup (end user)
+1. Open `chrome://extensions` and enable **Developer mode**.
+2. **Load unpacked** and select this folder.
+3. Refresh any open Instagram / YouTube tabs.
 
-1. Download / clone this repo (you only need the `extension/` folder).
-2. Open `chrome://extensions` in Chrome.
-3. Turn on **Developer mode** (toggle, top right).
-4. Click **Load unpacked** and select the `extension/` folder.
-5. Go to https://brainrot.quicklabs.pro and **sign up / log in**
-   (you'll get a 6-digit code by email to verify).
-   The dashboard will show **"🧩 Extension connected"**.
-6. Open Instagram Reels or YouTube Shorts — the brain bubble appears and
-   starts counting. That's it.
+## Features
 
-No video IDs or browsing history are collected — the extension only counts
-swipes per platform.
+- **Block on command** — toolbar popup: 1 hour, 2 hours, until midnight, or
+  until you unblock. A full-screen wall covers Reels/Shorts and videos pause.
+- **Unblock friction** — unblocking early needs a 30s countdown in the popup
+  (keep the popup open).
+- **Shortcut** — `Alt+Shift+B` blocks until midnight (rebind at
+  `chrome://extensions/shortcuts`). It only blocks; unblocking goes via the popup.
+- **Daily schedule** — recurring block window (e.g. 22:00–06:00).
+- **Entry points hidden** — while blocked, Shorts/Reels buttons and shelves
+  are hidden from the page.
+- **Counter bubble** — draggable count of today's swipes, rotting-brain icon,
+  screen fade and milestone popups past your daily target, optional hard block
+  at the target. All toggles are in the popup.
 
-## What you get
+No video IDs or history are stored — only a per-platform timestamp per swipe
+(kept 7 days).
 
-- **Brain bubble** — draggable counter on Reels/Shorts pages showing your
-  rolling 24h swipe count. Logged out, it shows a "Login to track" button
-  and counts nothing.
-- **Rotting brain** — the icon decays in 4 stages as you pass 1×, 2×, 3× of
-  your daily target (default 50).
-- **Screen fade** — past the target, every extra video darkens the page a
-  bit more (up to 88% black).
-- **Hard block** — optional: at the target, Reels/Shorts get fully walled off
-  until your 24h window frees up.
-- **Milestone popups** — a one-time roast each time you cross 2× the target.
-- **Friends leaderboard** — double-click the bubble for today's counts of you
-  and your friends (lowest wears the crown 👑), plus a link to the portal.
+## Files
 
-Every effect can be toggled (and the daily target changed) on the portal:
-**https://brainrot.quicklabs.pro/settings** — changes apply instantly.
-Invite friends from **https://brainrot.quicklabs.pro/friends** (one active
-invite code at a time).
-
-## Notes
-
-- The bubble shows a **rolling 24h window**; the portal's "Today" card is the
-  UTC calendar day. The portal's "Last 24 hours" card matches the bubble.
-- Counts survive offline: events queue locally and sync as soon as the
-  server is reachable (every ~30s).
-- Logging in with a different account resets the local counter — counts
-  never leak between accounts.
-
-## How it works (for developers)
-
-- **content.js** watches the SPA URL for `/reels/…` / `/shorts/…`, counts
-  swipe-ups (back-swipes don't count) and renders the bubble + effects.
-- **background.js** owns all state in `chrome.storage.local`:
-  - `auth` — JWT + user handed over from the portal
-  - `watchedShortform` — rolling 24h window (drives the bubble)
-  - `outbox` — pending events, flushed to `POST /events/batch`, retried
-    every 30s (offline-safe, idempotent via random `client_event_id`)
-  - `settings` — effect toggles, synced from the server and pushed
-    instantly by the portal
-- **connect.js** runs only on the portal origin and bridges the JWT and
-  settings via `postMessage`.
-- Counts and effects update live in every open tab via
-  `chrome.storage.onChanged`.
-
-### Local development
-
-The shipped manifest is store-ready and only references production URLs.
-For local development:
-
-1. In `background.js`, swap in the commented `localhost` constants
-   (`http://localhost:3017` / `http://localhost:3010`).
-2. In `manifest.json`, temporarily add `"http://localhost:3017/*"` to
-   `host_permissions` and `"http://localhost:3010/*"` to the `connect.js`
-   content-script `matches`.
-3. Reload the extension. Revert both before packaging for the store.
+- `content.js` — detects reels/shorts, bubble, effects, block wall
+- `background.js` — owns the swipe log, handles the shortcut
+- `popup.html` / `popup.js` — controls
+- `popup.css` — styles injected into Instagram/YouTube

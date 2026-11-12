@@ -64,9 +64,17 @@
 }
 
 @keyframes brc-pop {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(1.35); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.35);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 #brainrot-counter-bubble .brc-pulse {
@@ -230,8 +238,25 @@
     transform: translateY(-8px) scale(0.85);
     opacity: 0;
   }
+
   100% {
     transform: translateY(0) scale(1);
     opacity: 1;
   }
+}
+/* ---------- hide short-form entry points while a block is on ---------- */
+html.brc-hide-shortform ytd-reel-shelf-renderer,
+html.brc-hide-shortform ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]),
+html.brc-hide-shortform ytd-rich-shelf-renderer[is-shorts],
+html.brc-hide-shortform ytd-guide-entry-renderer:has(a[title="Shorts"]),
+html.brc-hide-shortform ytd-mini-guide-entry-renderer[aria-label="Shorts"],
+html.brc-hide-shortform ytd-video-renderer:has(a[href^="/shorts/"]),
+html.brc-hide-shortform ytd-rich-item-renderer:has(a[href^="/shorts/"]),
+html.brc-hide-shortform ytd-grid-video-renderer:has(a[href^="/shorts/"]),
+html.brc-hide-shortform ytm-shorts-lockup-view-model,
+html.brc-hide-shortform ytm-reel-shelf-renderer,
+html.brc-hide-shortform a[href="/reels/"],
+html.brc-hide-shortform a[href^="/reels/?"],
+html.brc-hide-shortform div:has(> a[href="/reels/"]) {
+  display: none !important;
 }

@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Focus Meter</title>
+<style>
+  body { width: 300px; margin: 0; padding: 14px; font: 13px -apple-system, system-ui, sans-serif; color: #1c1c1e; background: #fff; }
+  @media (prefers-color-scheme: dark) { body { color: #f2f2f7; background: #1c1c1e; } .card { background: #2c2c2e !important; } button { background: #3a3a3c !important; color: #f2f2f7 !important; } }
+  h1 { font-size: 15px; margin: 0 0 10px; }
+  .card { background: #f2f2f7; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .count { font-size: 34px; font-weight: 700; line-height: 1; }
+  .sub { color: #8e8e93; font-size: 12px; margin-top: 4px; }
+  .status { font-weight: 600; margin-bottom: 8px; }
+  .on { color: #d70015; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  button { border: 0; border-radius: 8px; padding: 7px 10px; background: #e5e5ea; font: inherit; cursor: pointer; }
+  button.primary { background: #d70015; color: #fff; }
+  button:disabled { opacity: .5; cursor: default; }
+  label.opt { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+  input[type=number] { width: 60px; }
+</style>
+</head>
+<body>
+  <h1>🧠 Focus Meter</h1>
+
+  <div class="card">
+    <div class="count" id="count">0</div>
+    <div class="sub" id="breakdown">reels / shorts today</div>
+  </div>
+
+  <div class="card">
+    <div class="status" id="status"></div>
+    <div class="row" id="blockButtons">
+      <button data-min="60">1 hour</button>
+      <button data-min="120">2 hours</button>
+      <button data-min="midnight">Until midnight</button>
+      <button data-min="forever">Until I unblock</button>
+    </div>
+    <div class="row" id="unblockRow" hidden>
+      <button id="unblock" class="primary">Unblock</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="opt">Daily target <input type="number" id="target" min="1" max="1000"></label>
+    <label class="opt">Hard block at target <input type="checkbox" id="hard"></label>
+    <label class="opt">Rotting brain icon <input type="checkbox" id="rot"></label>
+    <label class="opt">Screen fade past target <input type="checkbox" id="fade"></label>
+    <label class="opt">Milestone popups <input type="checkbox" id="milestones"></label>
+  </div>
+
+  <div class="card">
+    <label class="opt">Daily schedule <input type="checkbox" id="sched"></label>
+    <label class="opt">From <input type="time" id="schedStart"></label>
+    <label class="opt">To <input type="time" id="schedEnd"></label>
+    <div class="sub">Shortcut: Alt+Shift+B blocks until midnight (change at chrome://extensions/shortcuts)</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

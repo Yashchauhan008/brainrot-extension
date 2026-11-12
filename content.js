@@ -2,8 +2,8 @@
 // Detects reels/shorts, reports them to the background worker, and renders
 // the floating brain bubble (login-gated, merged 24h count, live across tabs)
 // plus the "rot" effects: staged icon decay, screen fade past the daily
-// target, and milestone popups. Effects are user-toggleable (portal settings,
-// synced to chrome.storage by the background worker).
+// target, and milestone popups. Fully offline: settings and counts live in
+// chrome.storage.local and are edited from the toolbar popup.
 
 (() => {
   // The background worker re-injects into open tabs after an extension
@@ -21,19 +21,37 @@
     milestone_popups_enabled: true,
     hard_block_enabled: false,
     daily_target: 50,
+    manual_block_until: 0, // epoch ms; block reels/shorts until then
+    schedule_enabled: false, // recurring daily block window
+    schedule_start: "22:00",
+    schedule_end: "06:00",
   };
+
+  // True when the current local time is inside the daily schedule window
+  // (handles overnight windows like 22:00 → 06:00).
+  function inSchedule() {
+    if (!settings.schedule_enabled) return false;
+    const toMin = (t) => {
+      const [h, m] = String(t).split(":").map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    const now = new Date();
+    const cur = now.getHours() * 60 + now.getMinutes();
+    const a = toMin(settings.schedule_start);
+    const b = toMin(settings.schedule_end);
+    if (a === b) return false;
+    return a < b ? cur >= a && cur < b : cur >= a || cur < b;
+  }
 
   let bubble = null;
   let brainEl = null;
   let countEl = null;
-  let loginBtn = null;
   let fadeEl = null;
   let blockerEl = null;
   let blockerActive = false;
   let milestoneEl = null;
   let milestoneTimer = null;
-  let friendsEl = null;
-  let loggedIn = false;
+  const loggedIn = true; // no accounts any more — kept so effect gates read the same
   let settings = { ...DEFAULT_SETTINGS };
   let lastVideoKey = null;
   let keyStack = []; // recent reel keys, in-memory only, for back-swipe detection
@@ -165,7 +183,7 @@
       <div class="brc-block-emoji">🧠🚫</div>
       <div class="brc-block-title">Daily limit reached</div>
       <div class="brc-block-text"></div>
-      <div class="brc-block-hint">Unlocks at midnight — see you tomorrow.<br>Toggle "Hard block" off in the BrainRot portal to disable.</div>`;
+      <div class="brc-block-hint"></div>`;
 
     // Swallow every input that could scroll to the next reel.
     for (const type of ["wheel", "touchmove", "pointerdown", "click"]) {
@@ -206,15 +224,35 @@
 
   function renderBlocker(count) {
     const target = Math.max(1, settings.daily_target);
-    blockerActive =
-      loggedIn && settings.hard_block_enabled && onVideoPage && count >= target;
+    const scheduled = inSchedule();
+    const manual = scheduled || Date.now() < (settings.manual_block_until || 0);
+    // Also hide the Shorts/Reels buttons and shelves while a block is on.
+    document.documentElement.classList.toggle("brc-hide-shortform", manual);
+    const limitHit = settings.hard_block_enabled && count >= target;
+    blockerActive = onVideoPage && (manual || limitHit);
 
     ensureBlocker();
     blockerEl.style.display = blockerActive ? "flex" : "none";
 
     if (blockerActive) {
-      blockerEl.querySelector(".brc-block-text").textContent =
-        `${count} brainrot videos today — your limit is ${target}. Go touch grass 🌱`;
+      const title = blockerEl.querySelector(".brc-block-title");
+      const text = blockerEl.querySelector(".brc-block-text");
+      const hint = blockerEl.querySelector(".brc-block-hint");
+      if (manual) {
+        const until = settings.manual_block_until;
+        title.textContent = scheduled ? "Scheduled focus time" : "Blocked by you";
+        text.textContent = "You asked me to stop you. Go do something real 🌱";
+        hint.textContent =
+          scheduled
+            ? `Focus window ${settings.schedule_start}–${settings.schedule_end}. Change it in the Focus Meter popup.`
+            : until > Date.now() + 5 * 365 * 24 * 3600 * 1000
+            ? "Open the Focus Meter popup to unblock."
+            : `Blocked until ${new Date(until).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. Open the Focus Meter popup to unblock early.`;
+      } else {
+        title.textContent = "Daily limit reached";
+        text.textContent = `${count} brainrot videos today — your limit is ${target}. Go touch grass 🌱`;
+        hint.textContent = "Unlocks at midnight. Turn off \"Hard block\" in the Focus Meter popup to disable.";
+      }
       silenceVideos();
     }
   }
@@ -281,94 +319,6 @@
     });
   }
 
-  // ---------- friends panel (double-click the bubble) ----------
-
-  function positionNearBubble(el) {
-    const rect = bubble?.getBoundingClientRect();
-    if (!rect) return;
-    el.style.top = Math.min(window.innerHeight - 120, rect.bottom + 10) + "px";
-    el.style.right = Math.max(8, window.innerWidth - rect.right) + "px";
-  }
-
-  function closeFriends() {
-    friendsEl?.remove();
-    friendsEl = null;
-  }
-
-  function renderFriendsList(data) {
-    if (!friendsEl) return;
-    const listEl = friendsEl.querySelector(".brc-friends-list");
-
-    if (!data?.ok) {
-      listEl.innerHTML = `<div class="brc-friends-empty">Couldn't load — is the server up?</div>`;
-      return;
-    }
-
-    const everyone = [
-      { ...data.me, name: "You" },
-      ...(data.friends || []),
-    ].sort((a, b) => a.today_total - b.today_total);
-
-    if (everyone.length === 1) {
-      listEl.innerHTML = `<div class="brc-friends-empty">No friends yet — invite them from the portal to compete.</div>`;
-      return;
-    }
-
-    // Least brainrot today wins the crown.
-    listEl.innerHTML = everyone
-      .map((person, i) => {
-        const name = document.createTextNode(person.name);
-        const row = document.createElement("div");
-        row.className = "brc-friends-row";
-        const nameEl = document.createElement("span");
-        nameEl.className = "brc-friends-name";
-        nameEl.appendChild(name);
-        row.appendChild(nameEl);
-        row.insertAdjacentHTML(
-          "beforeend",
-          `<span class="brc-friends-count">${Number(person.today_total) || 0}</span>`,
-        );
-        if (i === 0) row.insertAdjacentHTML("afterbegin", `<span>👑</span>`);
-        return row.outerHTML;
-      })
-      .join("");
-  }
-
-  function toggleFriends() {
-    if (friendsEl) {
-      closeFriends();
-      return;
-    }
-    if (!loggedIn) return;
-
-    friendsEl = document.createElement("div");
-    friendsEl.id = "brainrot-friends";
-    friendsEl.innerHTML = `
-      <div class="brc-friends-title">Today's rot 🏆</div>
-      <div class="brc-friends-list"><div class="brc-friends-empty">Loading…</div></div>
-      <button class="brc-friends-portal" type="button">Open portal ↗</button>`;
-    positionNearBubble(friendsEl);
-    document.documentElement.appendChild(friendsEl);
-
-    friendsEl.querySelector(".brc-friends-portal").addEventListener("click", () => {
-      chrome.runtime.sendMessage({ type: "OPEN_PORTAL", path: "/friends" });
-      closeFriends();
-    });
-
-    chrome.runtime.sendMessage({ type: "GET_FRIENDS" }, renderFriendsList);
-  }
-
-  // Any click outside the panel/bubble dismisses it.
-  document.addEventListener(
-    "pointerdown",
-    (e) => {
-      if (!friendsEl) return;
-      if (friendsEl.contains(e.target) || bubble?.contains(e.target)) return;
-      closeFriends();
-    },
-    true,
-  );
-
   // ---------- floating bubble ----------
 
   function ensureBubble() {
@@ -378,31 +328,14 @@
     bubble.id = "brainrot-counter-bubble";
     bubble.innerHTML = `
       <div class="brc-brain"></div>
-      <span class="brc-count">–</span>
-      <button class="brc-login" type="button">Login to track</button>`;
+      <span class="brc-count">–</span>`;
     brainEl = bubble.querySelector(".brc-brain");
     countEl = bubble.querySelector(".brc-count");
-    loginBtn = bubble.querySelector(".brc-login");
     renderedStage = -1;
     renderBrain(lastCount);
 
-    loginBtn.addEventListener("click", () => {
-      chrome.runtime.sendMessage({ type: "OPEN_PORTAL" });
-    });
-
-    bubble.addEventListener("dblclick", (e) => {
-      if (e.target.closest(".brc-login")) return;
-      e.preventDefault();
-      toggleFriends();
-    });
-
     document.documentElement.appendChild(bubble);
     makeDraggable(bubble);
-  }
-
-  function renderAuthState() {
-    if (!bubble) return;
-    bubble.classList.toggle("brc-locked", !loggedIn);
   }
 
   function setBubbleVisible(visible) {
@@ -442,14 +375,6 @@
     });
   }
 
-  function refreshAuth() {
-    chrome.runtime.sendMessage({ type: "GET_AUTH" }, (response) => {
-      loggedIn = Boolean(response?.auth);
-      renderAuthState();
-      applyEffects(lastCount);
-    });
-  }
-
   function loadSettings() {
     chrome.storage.local.get({ settings: null }, (stored) => {
       settings = { ...DEFAULT_SETTINGS, ...(stored.settings || {}) };
@@ -461,7 +386,6 @@
     let startX, startY, origX, origY, dragging = false;
 
     el.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".brc-login")) return; // don't drag from the button
       dragging = true;
       startX = e.clientX;
       startY = e.clientY;
@@ -494,10 +418,10 @@
     const wasOnVideoPage = onVideoPage;
     onVideoPage = video !== null;
     setBubbleVisible(onVideoPage);
-    if (wasOnVideoPage !== onVideoPage) {
-      renderFade(lastCount);
-      renderBlocker(lastCount);
-    }
+    if (wasOnVideoPage !== onVideoPage) renderFade(lastCount);
+
+    // Manual blocks expire on a timer — re-evaluate every tick.
+    renderBlocker(lastCount);
 
     // The SPA keeps swapping <video> elements — re-silence while blocked.
     if (blockerActive) silenceVideos();
@@ -519,13 +443,10 @@
     keyStack.push(key);
     if (keyStack.length > 50) keyStack.shift();
 
-    // Only count while logged in — that's the whole game.
-    if (loggedIn) {
-      chrome.runtime.sendMessage({
-        type: "WATCH_EVENT",
-        platform: video.platform,
-      });
-    }
+    chrome.runtime.sendMessage({
+      type: "WATCH_EVENT",
+      platform: video.platform,
+    });
   }
 
   // Live updates in every tab: background writes storage, all tabs re-render.
@@ -537,17 +458,9 @@
       renderedStage = -1; // force icon re-render with the new toggles
       applyEffects(lastCount);
     }
-    if (changes.auth) {
-      loggedIn = Boolean(changes.auth.newValue);
-      renderAuthState();
-      renderedStage = -1;
-      applyEffects(lastCount);
-    }
   });
 
   ensureBubble();
-  renderAuthState();
-  refreshAuth();
   loadSettings();
   updateCount();
   setBubbleVisible(currentVideo() !== null);
