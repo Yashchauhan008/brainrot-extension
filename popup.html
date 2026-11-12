@@ -47,6 +47,7 @@
         <div class="seg" id="range">
           <button data-days="7" aria-pressed="true">7d</button>
           <button data-days="30" aria-pressed="false">30d</button>
+          <button data-days="0" aria-pressed="false">All</button>
         </div>
       </div>
       <div class="legend">
@@ -93,6 +94,16 @@
       <label class="opt"><span>Rotting brain icon</span><input class="sw-input" type="checkbox" id="rot"></label>
       <label class="opt"><span>Screen fade past target</span><input class="sw-input" type="checkbox" id="fade"></label>
       <label class="opt"><span>Milestone popups</span><input class="sw-input" type="checkbox" id="milestones"></label>
+    </div>
+    <div class="card">
+      <div class="h">Your data</div>
+      <div class="muted small" style="margin-bottom:8px">History is kept for life, but only in this browser — uninstalling or clearing extension data erases it. Export a backup now and then.</div>
+      <div class="chips">
+        <button id="exportBtn">Export backup</button>
+        <button id="importBtn">Import backup</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" hidden>
+      <div class="muted small center" id="dataMsg" style="margin-top:6px"></div>
     </div>
     <div class="muted small center">All data stays on this device.</div>
   </section>

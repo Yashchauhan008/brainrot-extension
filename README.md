@@ -21,6 +21,8 @@ server, no network requests. Everything lives in `chrome.storage.local`.
 - **Daily schedule** — recurring block window (e.g. 22:00–06:00).
 - **Feed videos** — optional: Instagram feed videos are paused, muted and
   covered with a static thumbnail instead of autoplaying.
+- **Lifetime history** — daily totals (and peak hours) are kept forever in
+  `chrome.storage.local`; export/import a JSON backup from Settings.
 - **Entry points hidden** — while blocked, Shorts/Reels buttons and shelves
   are hidden from the page.
 - **Counter bubble** — draggable count of today's swipes, rotting-brain icon,
@@ -28,7 +30,7 @@ server, no network requests. Everything lives in `chrome.storage.local`.
   at the target. All toggles are in the popup.
 
 No video IDs or history are stored — only a per-platform timestamp per swipe
-(kept 30 days).
+(kept for life as one small row per day, locally).
 
 ## Files
 
