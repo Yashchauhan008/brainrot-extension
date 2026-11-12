@@ -24,6 +24,10 @@ server, no network requests. Everything lives in `chrome.storage.local`.
   covered with a static thumbnail instead of autoplaying.
 - **Lifetime history** — daily totals (and peak hours) are kept forever in
   `chrome.storage.local`; export/import a JSON backup from Settings.
+- **Lock while blocking** — during any block (manual or scheduled) the feed is
+  frozen automatically and the settings that could weaken the block (target,
+  hard block, feed toggle, schedule) are locked. A scheduled block can be
+  skipped for the day after a 30s cooling-off.
 - **Entry points hidden** — while blocked, Shorts/Reels buttons and shelves
   are hidden from the page.
 - **Counter bubble** — draggable count of today's swipes, rotting-brain icon,

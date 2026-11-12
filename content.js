@@ -23,6 +23,7 @@
     daily_target: 50,
     manual_block_until: 0, // epoch ms; block reels/shorts until then
     block_feed_videos: false, // hide video posts in the Instagram feed
+    schedule_skip_until: 0, // epoch ms; "skip schedule" cooldown result
     schedule_enabled: false, // recurring daily block window
     schedule_start: "22:00",
     schedule_end: "06:00",
@@ -32,6 +33,7 @@
   // (handles overnight windows like 22:00 → 06:00).
   function inSchedule() {
     if (!settings.schedule_enabled) return false;
+    if (Date.now() < (settings.schedule_skip_until || 0)) return false;
     const toMin = (t) => {
       const [h, m] = String(t).split(":").map(Number);
       return (h || 0) * 60 + (m || 0);
@@ -265,13 +267,19 @@
     });
   }
 
+  // A block (manual or scheduled) is on — the feed is frozen too, whatever
+  // the user's own feed toggle says, so it can't be used as a loophole.
+  function focusOn() {
+    return inSchedule() || Date.now() < (settings.manual_block_until || 0);
+  }
+
   // ---------- feed videos: freeze + mute + thumbnail ----------
 
   // Instagram feed videos (inside <article>) are paused, muted and covered by
   // a static thumbnail so they can't autoplay or make noise. Reels pages are
   // untouched here — those are handled by the block wall.
   function renderFeedVideos() {
-    if (!settings.block_feed_videos || onVideoPage) {
+    if (!(settings.block_feed_videos || focusOn()) || onVideoPage) {
       if (document.querySelector(".brc-feed-thumb")) {
         document.querySelectorAll(".brc-feed-thumb").forEach((el) => el.remove());
         document.querySelectorAll("video[data-brc-frozen]").forEach((v) => {

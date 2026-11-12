@@ -8,6 +8,7 @@ const DEFAULTS = {
   daily_target: 50,
   manual_block_until: 0,
   block_feed_videos: false,
+  schedule_skip_until: 0,
   schedule_enabled: false,
   schedule_start: "22:00",
   schedule_end: "06:00",
@@ -54,17 +55,57 @@ function renderToday() {
   fill.classList.toggle("over", today.length >= target);
 }
 
+// Same window logic as content.js (handles overnight windows).
+function inSchedule() {
+  if (!settings.schedule_enabled) return false;
+  if (Date.now() < settings.schedule_skip_until) return false;
+  const toMin = (t) => { const [h, m] = String(t).split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+  const now = new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const a = toMin(settings.schedule_start), b = toMin(settings.schedule_end);
+  if (a === b) return false;
+  return a < b ? cur >= a && cur < b : cur >= a || cur < b;
+}
+
+function scheduleEndTime() {
+  const [h, m] = settings.schedule_end.split(":").map(Number);
+  const d = new Date();
+  d.setHours(h || 0, m || 0, 0, 0);
+  if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+
+const hhmm = (ts) => new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+const manualOn = () => Date.now() < settings.manual_block_until;
+
 function renderStatus() {
-  const active = Date.now() < settings.manual_block_until;
-  $("blockButtons").hidden = active;
-  $("unblockRow").hidden = !active;
+  const manual = manualOn();
+  const sched = !manual && inSchedule();
+  $("blockButtons").hidden = manual || sched;
+  $("unblockRow").hidden = !manual;
+  $("schedRow").hidden = !sched;
   const status = $("status");
-  status.classList.toggle("on", active);
-  if (!active) { status.textContent = "Not blocking — block on command:"; return; }
-  const until = settings.manual_block_until;
-  status.textContent = until > Date.now() + FOREVER_MS / 2
-    ? "🚫 Blocked until you unblock"
-    : "🚫 Blocked until " + new Date(until).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  status.classList.toggle("on", manual || sched);
+  if (manual) {
+    const until = settings.manual_block_until;
+    status.textContent = until > Date.now() + FOREVER_MS / 2
+      ? "🚫 Blocked until you unblock"
+      : "🚫 Blocked until " + hhmm(until);
+  } else if (sched) {
+    status.textContent = "🔒 Scheduled focus time until " + hhmm(scheduleEndTime());
+  } else {
+    status.textContent = "Not blocking — block on command:";
+  }
+  renderLock(manual || sched);
+}
+
+// While any block is on, settings that could weaken it are locked, and the
+// feed toggle shows ON (the feed is frozen during a block regardless).
+const LOCKED = ["target", "hard", "feedVideos", "sched", "schedStart", "schedEnd"];
+function renderLock(locked) {
+  $("lockNote").hidden = !locked;
+  LOCKED.forEach((id) => ($(id).disabled = locked));
+  $("feedVideos").checked = locked ? true : Boolean(settings.block_feed_videos);
 }
 
 function block(kind) {
@@ -76,8 +117,8 @@ function block(kind) {
   renderStatus();
 }
 
-function unblock() {
-  const btn = $("unblock");
+// 30s cooling-off before an early unblock / schedule skip.
+function cooldown(btn, label, done) {
   if (countdown) return;
   let left = UNBLOCK_WAIT_S;
   btn.disabled = true;
@@ -88,11 +129,15 @@ function unblock() {
     clearInterval(countdown);
     countdown = null;
     btn.disabled = false;
-    btn.textContent = "Unblock";
-    save({ manual_block_until: 0 });
+    btn.textContent = label;
+    done();
     renderStatus();
   }, 1000);
 }
+
+const unblock = () => cooldown($("unblock"), "Unblock", () => save({ manual_block_until: 0 }));
+const skipSchedule = () =>
+  cooldown($("skipSched"), "Skip schedule for today", () => save({ schedule_skip_until: scheduleEndTime() }));
 
 // ---------- insights ----------
 const keyOf = (ts) => {
@@ -312,7 +357,6 @@ function importData(file) {
   dailyStats = stored.dailyStats;
 
   renderToday();
-  renderStatus();
 
   const map = { hard: "hard_block_enabled", rot: "rot_icon_enabled", fade: "screen_fade_enabled",
     milestones: "milestone_popups_enabled", feedVideos: "block_feed_videos", sched: "schedule_enabled" };
@@ -332,6 +376,7 @@ function importData(file) {
 
   $("blockButtons").addEventListener("click", (e) => { if (e.target.dataset?.min) block(e.target.dataset.min); });
   $("unblock").addEventListener("click", unblock);
+  $("skipSched").addEventListener("click", skipSchedule);
 
   $("tabs").addEventListener("click", (e) => { if (e.target.dataset?.tab) showTab(e.target.dataset.tab); });
   $("range").addEventListener("click", (e) => {
@@ -350,6 +395,9 @@ function importData(file) {
     $("chartWrap").hidden = on;
     $("tableBtn").textContent = on ? "Chart" : "Table";
   });
+
+  renderStatus();
+  setInterval(renderStatus, 1000); // block timers / schedule windows tick over while open
 
   let tab = "focus";
   try { tab = localStorage.getItem("fm-tab") || "focus"; } catch (_) {}

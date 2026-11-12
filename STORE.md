@@ -1,4 +1,4 @@
-# Chrome Web Store listing — Reels & Shorts Blocker v3.0.0
+# Chrome Web Store listing — Reels & Shorts Blocker v3.0.1
 
 ## Store listing tab
 **Name (manifest, max 75):** Reels & Shorts Blocker – Short-Form Video Blocker

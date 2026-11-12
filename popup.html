@@ -36,6 +36,10 @@
         <button id="unblock" class="danger wide">Unblock</button>
         <div class="muted small center">Early unblock needs a 30s cooling-off — keep this open.</div>
       </div>
+      <div id="schedRow" hidden>
+        <button id="skipSched" class="danger wide">Skip schedule for today</button>
+        <div class="muted small center">Needs a 30s cooling-off — keep this open.</div>
+      </div>
     </div>
     <div class="muted small center">Shortcut <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> blocks until midnight</div>
   </section>
@@ -72,6 +76,7 @@
   </section>
 
   <section id="tab-settings" class="tab" hidden>
+    <div class="lock" id="lockNote" hidden>🔒 Locked while a block is on — these settings could be used to dodge it. Unblock from the Focus tab first.</div>
     <div class="card">
       <div class="h">Limits</div>
       <label class="opt"><span>Daily target</span><input type="number" id="target" min="1" max="1000"></label>
